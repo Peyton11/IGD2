@@ -17,7 +17,7 @@ public class DiverMovement : MonoBehaviour
     private Rigidbody rb;
     
     // Reference to the wave script (assign in Inspector)
-    public Wave wave;
+    public WaveScript wave;
     
     void Start()
     {

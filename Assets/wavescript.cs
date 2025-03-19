@@ -1,26 +1,33 @@
 using UnityEngine;
 
-public class Wave : MonoBehaviour
+[RequireComponent(typeof(MeshFilter))]
+public class WaveScript : MonoBehaviour
 {
-    public float amplitude = 0.5f; // Amplitude of the wave
-    public float wavelength = 5f;  // Wavelength of the wave
-    public float speed = 2f;      // Speed of the wave
-    public Vector3 entryPoint;    // The point where the diver enters the water
-    
-    private float timeAlive = 0f; // Time since wave started
+    public float amplitude = 1.0f;  // A: Amplitude of the wave
+    public float wavelength = 2.0f; // λ: Wavelength of the wave
+    public float speed = 1.0f;   // V: Velocity of the wave
+    public float decaySpeed = 0.1f; // a: Speed of decay
 
-    private Material waveMaterial;
-    
-    public ParticleSystem splashEffect;
+    private Vector3[] originalVertices; // Store original mesh vertices
+    private Vector3[] modifiedVertices; // Modified vertices during runtime
+    private Mesh mesh;                  // Reference to the water mesh
+    private bool isWaveActive = false;  // Track whether waves are active
+    private float timeOfImpact;         // Time when the impact occurred
+    private Vector3 entryPoint;         // P0(x0, z0): Center point of the wave
 
     void Start()
     {
-        // Get the material to modify the wave effect
-        waveMaterial = GetComponent<Renderer>().material;
+        // Get the mesh attached to this object
+        mesh = GetComponent<MeshFilter>().mesh;
+
+        // Cache the original vertex positions
+        originalVertices = mesh.vertices;
+        modifiedVertices = new Vector3[originalVertices.Length];
     }
 
     void Update()
     {
+        
         // Keybinds to change values    
         if (Input.GetKeyDown(KeyCode.A)) amplitude += 0.1f;
         if (Input.GetKeyDown(KeyCode.B)) amplitude -= 0.1f;
@@ -28,59 +35,52 @@ public class Wave : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.L)) wavelength -= 0.1f;
         if (Input.GetKeyDown(KeyCode.V)) speed += 0.1f;
         if (Input.GetKeyDown(KeyCode.N)) speed -= 0.1f;
-        
-        // Update time alive for wave propagation
-        timeAlive += Time.deltaTime;
 
-        // Calculate the wave's displacement based on the time
-        float waveDistance = speed * timeAlive; // How far the wave has propagated
-        
-        // Set the wave position in the shader or material
-        waveMaterial.SetFloat("_WaveDistance", waveDistance);
-        waveMaterial.SetFloat("_Amplitude", amplitude);
-        waveMaterial.SetFloat("_Wavelength", wavelength);
-        
-        // Debug.Log($"WaveDistance: {waveDistance}, Amplitude: {amplitude}, Wavelength: {wavelength}");
-    }
-    
-    // Detect when the diver collides with the water
-    private void OnTriggerEnter(Collider other)
-    {
-        // Capture the diver's position as the entry point
-        entryPoint = other.transform.position;
+        // Only calculate waves if they are active
+        if (!isWaveActive) return;
 
-        // Start the wave at the diver's entry position
-        StartWave(entryPoint);
-        
-        if (splashEffect != null)
+        // Time since the wave started
+        float t = Time.time - timeOfImpact;
+
+        // Loop through each vertex in the mesh
+        for (int i = 0; i < originalVertices.Length; i++)
         {
-            Debug.Log("SPLASH");
-            splashEffect.transform.position = new Vector3(-0.5f, 0, 5f);
-            splashEffect.Play();
+            // Get the original vertex position in local space
+            Vector3 vertex = originalVertices[i];
+
+            // Calculate the distance 'r' from the vertex to the wave's center (entryPoint)
+            float r = Mathf.Sqrt(
+                (transform.TransformPoint(vertex).x - entryPoint.x) * (transform.TransformPoint(vertex).x - entryPoint.x) +
+                (transform.TransformPoint(vertex).z - entryPoint.z) * (transform.TransformPoint(vertex).z - entryPoint.z)
+            );
+
+            // Apply the wave equation to calculate y-displacement
+            float displacement = amplitude * Mathf.Exp(-r * decaySpeed) *
+                                 Mathf.Cos(2 * Mathf.PI * (r - speed * t) / wavelength);
+
+            // Modify the y-position of the vertex
+            vertex.y = displacement;
+
+            // Add the modified vertex back to the array
+            modifiedVertices[i] = vertex;
         }
 
-        Debug.Log("Diver hit the water! Wave started at: " + entryPoint);
-    }
-    
-    // Function to start the wave from the point where the diver enters
-    public void StartWave(Vector3 entryPoint)
-    {
-        // entryPoint.y = 0f; // Set the y position to 0
-        this.entryPoint = entryPoint;
-        timeAlive = 0f;
-        // transform.position = entryPoint; // Position the wave at the entry point
-        
-        // Debug.Log("Wave successfully started at: " + entryPoint);
+        // Update the mesh
+        mesh.vertices = modifiedVertices;
+        mesh.RecalculateNormals(); // Adjust normals for proper lighting
+        mesh.RecalculateBounds(); // Update mesh bounds for accurate calculations
     }
 
-    // Optional: Change the wave parameters (Amplitude, Wavelength, Speed)
-    public void SetWaveParameters(float newAmplitude, float newWavelength, float newSpeed)
+    // Trigger waves when a diver enters the water
+    private void OnTriggerEnter(Collider other)
     {
-        amplitude = newAmplitude;
-        wavelength = newWavelength;
-        speed = newSpeed;
+        // Set the entry point of the wave
+        entryPoint = other.transform.position;
+
+        // Activate the waves
+        isWaveActive = true;
+
+        // Record the time of impact
+        timeOfImpact = Time.time;
     }
-    
-    
 }
-    
