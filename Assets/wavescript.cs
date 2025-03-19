@@ -10,6 +10,8 @@ public class Wave : MonoBehaviour
     private float timeAlive = 0f; // Time since wave started
 
     private Material waveMaterial;
+    
+    public ParticleSystem splashEffect;
 
     void Start()
     {
@@ -49,11 +51,17 @@ public class Wave : MonoBehaviour
 
         // Start the wave at the diver's entry position
         StartWave(entryPoint);
+        
+        if (splashEffect != null)
+        {
+            Debug.Log("SPLASH");
+            splashEffect.transform.position = new Vector3(-0.5f, 0, 5f);
+            splashEffect.Play();
+        }
 
         Debug.Log("Diver hit the water! Wave started at: " + entryPoint);
     }
-
-
+    
     // Function to start the wave from the point where the diver enters
     public void StartWave(Vector3 entryPoint)
     {
