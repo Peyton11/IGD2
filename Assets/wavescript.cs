@@ -14,6 +14,8 @@ public class WaveScript : MonoBehaviour
     private bool isWaveActive = false;  // Track whether waves are active
     private float timeOfImpact;         // Time when the impact occurred
     private Vector3 entryPoint;         // P0(x0, z0): Center point of the wave
+    
+    public ParticleSystem splashEffect;
 
     void Start()
     {
@@ -36,39 +38,30 @@ public class WaveScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.V)) speed += 0.1f;
         if (Input.GetKeyDown(KeyCode.N)) speed -= 0.1f;
 
-        // Only calculate waves if they are active
         if (!isWaveActive) return;
 
-        // Time since the wave started
         float t = Time.time - timeOfImpact;
 
-        // Loop through each vertex in the mesh
         for (int i = 0; i < originalVertices.Length; i++)
         {
-            // Get the original vertex position in local space
-            Vector3 vertex = originalVertices[i];
+            Vector3 worldVertex = transform.TransformPoint(originalVertices[i]);
 
-            // Calculate the distance 'r' from the vertex to the wave's center (entryPoint)
-            float r = Mathf.Sqrt(
-                (transform.TransformPoint(vertex).x - entryPoint.x) * (transform.TransformPoint(vertex).x - entryPoint.x) +
-                (transform.TransformPoint(vertex).z - entryPoint.z) * (transform.TransformPoint(vertex).z - entryPoint.z)
-            );
+            // Compute radial distance from the entry point
+            float r = Vector2.Distance(new Vector2(worldVertex.x, worldVertex.z), new Vector2(entryPoint.x, entryPoint.z));
 
-            // Apply the wave equation to calculate y-displacement
-            float displacement = amplitude * Mathf.Exp(-r * decaySpeed) *
-                                 Mathf.Cos(2 * Mathf.PI * (r - speed * t) / wavelength);
+            // Compute the wave displacement
+            float wavePhase = (2 * Mathf.PI * (r - speed * t)) / wavelength;
+            float displacement = amplitude * Mathf.Exp(-r * decaySpeed) * Mathf.Cos(wavePhase);
 
-            // Modify the y-position of the vertex
-            vertex.y = displacement;
-
-            // Add the modified vertex back to the array
-            modifiedVertices[i] = vertex;
+            // Apply only Y-axis displacement
+            modifiedVertices[i] = originalVertices[i];
+            modifiedVertices[i].y += displacement;
         }
 
         // Update the mesh
         mesh.vertices = modifiedVertices;
-        mesh.RecalculateNormals(); // Adjust normals for proper lighting
-        mesh.RecalculateBounds(); // Update mesh bounds for accurate calculations
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
     }
 
     // Trigger waves when a diver enters the water
@@ -82,5 +75,12 @@ public class WaveScript : MonoBehaviour
 
         // Record the time of impact
         timeOfImpact = Time.time;
+        
+        if (splashEffect != null)
+        {
+            Debug.Log("SPLASH");
+            splashEffect.transform.position = new Vector3(-0.5f, 0, 5f);
+            splashEffect.Play();
+        }
     }
 }
