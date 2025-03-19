@@ -19,6 +19,14 @@ public class Wave : MonoBehaviour
 
     void Update()
     {
+        // Keybinds to change values    
+        if (Input.GetKeyDown(KeyCode.A)) amplitude += 0.1f;
+        if (Input.GetKeyDown(KeyCode.B)) amplitude -= 0.1f;
+        if (Input.GetKeyDown(KeyCode.K)) wavelength += 0.1f;
+        if (Input.GetKeyDown(KeyCode.L)) wavelength -= 0.1f;
+        if (Input.GetKeyDown(KeyCode.V)) speed += 0.1f;
+        if (Input.GetKeyDown(KeyCode.N)) speed -= 0.1f;
+        
         // Update time alive for wave propagation
         timeAlive += Time.deltaTime;
 
@@ -29,13 +37,32 @@ public class Wave : MonoBehaviour
         waveMaterial.SetFloat("_WaveDistance", waveDistance);
         waveMaterial.SetFloat("_Amplitude", amplitude);
         waveMaterial.SetFloat("_Wavelength", wavelength);
+        
+        // Debug.Log($"WaveDistance: {waveDistance}, Amplitude: {amplitude}, Wavelength: {wavelength}");
     }
+    
+    // Detect when the diver collides with the water
+    private void OnTriggerEnter(Collider other)
+    {
+        // Capture the diver's position as the entry point
+        entryPoint = other.transform.position;
+
+        // Start the wave at the diver's entry position
+        StartWave(entryPoint);
+
+        Debug.Log("Diver hit the water! Wave started at: " + entryPoint);
+    }
+
 
     // Function to start the wave from the point where the diver enters
     public void StartWave(Vector3 entryPoint)
     {
+        // entryPoint.y = 0f; // Set the y position to 0
         this.entryPoint = entryPoint;
-        transform.position = entryPoint; // Position the wave at the entry point
+        timeAlive = 0f;
+        // transform.position = entryPoint; // Position the wave at the entry point
+        
+        // Debug.Log("Wave successfully started at: " + entryPoint);
     }
 
     // Optional: Change the wave parameters (Amplitude, Wavelength, Speed)
@@ -45,4 +72,7 @@ public class Wave : MonoBehaviour
         wavelength = newWavelength;
         speed = newSpeed;
     }
+    
+    
 }
+    

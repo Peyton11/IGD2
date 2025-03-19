@@ -107,11 +107,11 @@ public class DiverMovement : MonoBehaviour
             diveCount++; // Increment dive count
             Debug.Log($"Diver landed in the water! Total dives: {diveCount}");
             
-            // Trigger wave effect
-            if (wave != null)
-            {
-                wave.StartWave(other.transform.position);
-            }
+            // Trigger wave effect  
+            // if (wave != null)
+            // {
+            //     wave.StartWave(other.transform.position);
+            // }
 
             // Optional: Reset the diver to the starting position
             // ResetDiver();
