@@ -6,7 +6,7 @@ public class WaveScript : MonoBehaviour
 {
     public float amplitude = 1.0f;  // A: Amplitude of the wave
     public float wavelength = 2.0f; // λ: Wavelength of the wave
-    public float speed = 1.0f;   // V: Velocity of the wave
+    public float speed = 5.0f;   // V: Velocity of the wave
     public float decaySpeed = 0.1f; // a: Speed of decay
 
     private Vector3[] originalVertices; // Store original mesh vertices
@@ -42,7 +42,7 @@ public class WaveScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.N)) speed -= 0.1f;
         
         // Display wave values
-        values.text = "Amplitude = " + amplitude + "\nWavelength = " + wavelength + "\nSpeed = " + speed + "\nDecay Speed = " + decaySpeed;
+        values.text = "Amplitude = " + amplitude + "\nWavelength = " + wavelength + "\nSpeed = " + speed + "\nDecay Speed = " + decaySpeed + "\nTime = " + Time.time;
 
         if (!isWaveActive) return;
 
