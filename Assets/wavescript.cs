@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(MeshFilter))]
 public class WaveScript : MonoBehaviour
@@ -16,6 +17,8 @@ public class WaveScript : MonoBehaviour
     private Vector3 entryPoint;         // P0(x0, z0): Center point of the wave
     
     public ParticleSystem splashEffect;
+
+    public Text values;
 
     void Start()
     {
@@ -37,6 +40,9 @@ public class WaveScript : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.L)) wavelength -= 0.1f;
         if (Input.GetKeyDown(KeyCode.V)) speed += 0.1f;
         if (Input.GetKeyDown(KeyCode.N)) speed -= 0.1f;
+        
+        // Display wave values
+        values.text = "Amplitude = " + amplitude + "\nWavelength = " + wavelength + "\nSpeed = " + speed + "\nDecay Speed = " + decaySpeed;
 
         if (!isWaveActive) return;
 
